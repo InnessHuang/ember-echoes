@@ -78,3 +78,17 @@ npm run build
 运行 `npm ci`、`npm run dev` 后在浏览器打开 http://localhost:3000。观察下一次敌方意图，点击普通攻击、重击、防御或蓄能；能量不足的重击可点击查看原因，不推进战斗。胜负后行动禁用，点击“重新开始”恢复完整初始状态。规则入口支持原生 details 展开，按钮支持 Tab/Enter，系统设置减少动态效果时停用动画。
 
 也可运行 `npm run build` 后用 `npm start` 体验生产版本。build 继续使用 Webpack。Task 03 验收与人工检查清单见 [测试计划](docs/TEST_PLAN.md)。未增加浏览器测试依赖；另使用环境预装的 Chromium/Playwright 验证了真实浏览器交互。Safari、Firefox 和真实手机设备仍未验证。
+
+## Task 04A：确定性平衡基线
+
+已新增独立 TypeScript 模拟器，使用现有规则引擎运行三种敌人 × 四种固定策略的 12 场基线，保留 63 次完整行动记录。参数与 UI 均未调整；这不是 Python 模拟器或完整三战流程。
+
+```sh
+node scripts/run-baseline.mjs
+```
+
+输出为 `data/simulation/baseline-results.csv` 和 `baseline-actions.json`。策略、指标口径、全部结果和局限见 [第一轮平衡基线](docs/BALANCE_BASELINE.md)。本轮四种策略均未击败无升级 Boss，不代表所有策略无解；未开展参数扫描或数值调整。
+
+## Task 04B：新增策略对照
+
+`node scripts/run-strategy-comparison.mjs` 独立生成 B/D/E/F × 三种敌人的 12 场对照，输出 `data/simulation/strategy-comparison-results.csv` 与 `strategy-comparison-actions.json`，不覆盖 04A 基线。策略定义、68 次完整行动的结果解释与局限见 [策略对照报告](docs/STRATEGY_COMPARISON.md)。未修改规则或参数，未执行参数扫描。

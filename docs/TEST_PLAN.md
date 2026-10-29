@@ -121,3 +121,28 @@ Task 02 规则引擎与当前 Webpack 生产构建方案验收完成。浏览器
 新增原创 32×32 余烬图标 `app/favicon.ico`（252 字节），使用 Next.js 文件约定自动提供图标路由与 metadata。真实 Chromium 中 `/favicon.ico` 返回 200，ICO 文件头正确，页面图标链接已生成，控制台错误列表为空。
 
 最终 `npm run lint`、`npm run typecheck`、`npm test`、`npm run build` 均退出 0；40 项通过、0 失败、0 跳过。生产构建继续为 Webpack，未改规则、参数、布局、依赖或构建策略。Safari、Firefox、真实手机、屏幕阅读器及 200% 缩放未验证；不将模拟手机尺寸等同于真实设备验收。
+
+
+## Task 04A：确定性模拟器与基线
+
+`tests/simulation.test.ts` 新增 42 项，覆盖策略确定性、C 的实际能量上限、D 的致命/可生存边界与护甲、独立初始化、真实引擎调用、全部 12 场的逐步重放、有效与原始生命损失对账、Boss 实际攻击分类、200 次超时与最后一次行动胜利、非法行动/策略异常/非法引擎状态、不可变输入及 JSON/CSV 与当前计算结果一致性。原有规则与 UI 测试保持不变。
+
+| 命令 | 退出码 | 结果 |
+| --- | ---: | --- |
+| `npm ci` | 0 | 409 个包安装成功；既有 ESLint 上游弃用警告 |
+| `npm run lint` | 0 | 通过 |
+| `npm run typecheck` | 0 | 通过 |
+| `npm test` | 0 | 3 个文件、82 项通过、0 失败、0 跳过 |
+| `npm run build` | 0 | `next build --webpack`，沿用所需执行权限，编译与静态生成完成 |
+| `git diff --check` | 0 | 通过 |
+
+`node scripts/run-baseline.mjs` 初次退出 1：新增策略对象的 TypeScript 上下文推断出现 TS2739/TS2769/TS7006；明确 `satisfies` 类型后重新运行退出 0。原有引擎、集中参数、UI、依赖和生产构建策略均未修改。
+
+数据包含 12 场独立实验与 63 次完整行动，没有 error 或 timeout；另有测试专门验证这两个结果类型，不把它们冒充基础矩阵的胜负。完整策略、指标口径与实测结果见 [BALANCE_BASELINE](BALANCE_BASELINE.md)。不统计确定性重复运行的胜率；不执行参数扫描。
+
+
+## Task 04B：B/D/E/F 对照验收
+
+新增 `tests/strategy-comparison.test.ts` 的 35 项测试；E/F 选择边界、F 累积升级公式、确定性与输入不变、12 场独立初始化、真实引擎逐步重放和所有统计、04A 原文件哈希与 B/D 轨迹一致、04B CSV/JSON 完整性及错误/拒绝/超时路径均通过。原 82 项测试保持通过，全套共 117 项、0 失败、0 跳过。
+
+`npm ci`、lint、typecheck、完整 test、Webpack build 均真实执行并退出 0。04B 生成脚本执行两次均退出 0，CSV/JSON SHA-256 完全一致；重复只验证生成机制，不增加实验样本。原始 04A CSV、JSON 与报告的字节哈希未变。全部数据与结论见独立 [STRATEGY_COMPARISON](STRATEGY_COMPARISON.md)，原报告不覆盖。
