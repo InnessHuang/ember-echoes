@@ -1,0 +1,3 @@
+enemyId,strategyId,initialPlayerHp,initialEnergy,initialEnergyCap,initialEnemyHp,outcome,actionAttempts,playerActions,enemyAttacks,playerHp,enemyHp,finalEnergy,totalDamageTaken,totalDamageDealt,rawHpLossTaken,rawHpLossDealt,attackCount,heavyCount,defendCount,chargeCount,bossNormalAttacks,bossSpecialAttacks,reason,strategyLabel,finalPhase,overkillDamageDealt,overkillDamageTaken
+"boss","E","100","2","4","120","victory","13","13","12","12","-5","0","88","120","88","125","0","5","8","0","8","4",,"E","victory","5","0"
+"boss","C","100","2","4","120","defeat","7","7","7","-4","45","4","100","75","104","75","0","3","0","4","5","2",,"G (implemented by C)","defeat","0","4"

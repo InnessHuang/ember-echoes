@@ -1,0 +1,1384 @@
+{
+  "schemaVersion": 1,
+  "experiment": "Task 04C-1: Boss resource acquisition E vs G (implemented by C)",
+  "engineBaseCommit": "431a324c9797b95060bf2677f71838bbbfe5b2a0",
+  "strategyMapping": {
+    "E": "E",
+    "G": "C"
+  },
+  "maxActions": 200,
+  "config": {
+    "player": {
+      "maxHp": 100,
+      "initialHp": 100,
+      "initialEnergy": 2,
+      "energyCap": 4
+    },
+    "actions": {
+      "attack": {
+        "damage": 12,
+        "cost": 0,
+        "gain": 0,
+        "reduction": 0
+      },
+      "heavy": {
+        "damage": 25,
+        "cost": 2,
+        "gain": 0,
+        "reduction": 0
+      },
+      "defend": {
+        "damage": 0,
+        "cost": 0,
+        "gain": 1,
+        "reduction": 12
+      },
+      "charge": {
+        "damage": 0,
+        "cost": 0,
+        "gain": 2,
+        "reduction": 0
+      }
+    },
+    "enemies": {
+      "light": {
+        "maxHp": 42,
+        "damage": 9,
+        "specialDamage": null,
+        "specialEvery": null
+      },
+      "heavy": {
+        "maxHp": 60,
+        "damage": 13,
+        "specialDamage": null,
+        "specialEvery": null
+      },
+      "boss": {
+        "maxHp": 120,
+        "damage": 12,
+        "specialDamage": 22,
+        "specialEvery": 3
+      }
+    },
+    "upgrades": {
+      "blade": {
+        "damage": 3,
+        "energyCap": 0,
+        "reduction": 0
+      },
+      "core": {
+        "damage": 0,
+        "energyCap": 1,
+        "reduction": 0
+      },
+      "armor": {
+        "damage": 0,
+        "energyCap": 0,
+        "reduction": 6
+      }
+    }
+  },
+  "damageAccounting": "Effective loss = max(0, HP before) - max(0, HP after); raw HP loss retains negative HP; overkill = raw loss - effective loss.",
+  "simulations": [
+    {
+      "summary": {
+        "enemyId": "boss",
+        "strategyId": "E",
+        "initialPlayerHp": 100,
+        "initialEnergy": 2,
+        "initialEnergyCap": 4,
+        "initialEnemyHp": 120,
+        "outcome": "victory",
+        "actionAttempts": 13,
+        "playerActions": 13,
+        "enemyAttacks": 12,
+        "playerHp": 12,
+        "enemyHp": -5,
+        "finalEnergy": 0,
+        "totalDamageTaken": 88,
+        "totalDamageDealt": 120,
+        "rawHpLossTaken": 88,
+        "rawHpLossDealt": 125,
+        "attackCount": 0,
+        "heavyCount": 5,
+        "defendCount": 8,
+        "chargeCount": 0,
+        "bossNormalAttacks": 8,
+        "bossSpecialAttacks": 4,
+        "reason": null,
+        "strategyLabel": "E",
+        "finalPhase": "victory",
+        "overkillDamageDealt": 5,
+        "overkillDamageTaken": 0
+      },
+      "initialState": {
+        "player": {
+          "hp": 100,
+          "upgrades": {
+            "blade": 0,
+            "core": 0,
+            "armor": 0
+          },
+          "energy": 2,
+          "energyCap": 4
+        },
+        "enemy": {
+          "id": "boss",
+          "hp": 120
+        },
+        "turn": 1,
+        "phase": "ongoing",
+        "enemyAttacksExecuted": 0
+      },
+      "finalState": {
+        "player": {
+          "hp": 12,
+          "upgrades": {
+            "blade": 0,
+            "core": 0,
+            "armor": 0
+          },
+          "energy": 0,
+          "energyCap": 4
+        },
+        "enemy": {
+          "id": "boss",
+          "hp": -5
+        },
+        "turn": 14,
+        "phase": "victory",
+        "enemyAttacksExecuted": 12
+      },
+      "actions": [
+        {
+          "attempt": 1,
+          "action": "heavy",
+          "intentBefore": {
+            "kind": "normal",
+            "damage": 12,
+            "attackNumber": 1
+          },
+          "before": {
+            "player": {
+              "hp": 100,
+              "upgrades": {
+                "blade": 0,
+                "core": 0,
+                "armor": 0
+              },
+              "energy": 2,
+              "energyCap": 4
+            },
+            "enemy": {
+              "id": "boss",
+              "hp": 120
+            },
+            "turn": 1,
+            "phase": "ongoing",
+            "enemyAttacksExecuted": 0
+          },
+          "after": {
+            "player": {
+              "hp": 88,
+              "upgrades": {
+                "blade": 0,
+                "core": 0,
+                "armor": 0
+              },
+              "energy": 0,
+              "energyCap": 4
+            },
+            "enemy": {
+              "id": "boss",
+              "hp": 95
+            },
+            "turn": 2,
+            "phase": "ongoing",
+            "enemyAttacksExecuted": 1
+          },
+          "accepted": true,
+          "effects": {
+            "playerDamage": 25,
+            "enemyIntent": {
+              "kind": "normal",
+              "damage": 12,
+              "attackNumber": 1
+            },
+            "damageTaken": 12
+          },
+          "error": null
+        },
+        {
+          "attempt": 2,
+          "action": "defend",
+          "intentBefore": {
+            "kind": "normal",
+            "damage": 12,
+            "attackNumber": 2
+          },
+          "before": {
+            "player": {
+              "hp": 88,
+              "upgrades": {
+                "blade": 0,
+                "core": 0,
+                "armor": 0
+              },
+              "energy": 0,
+              "energyCap": 4
+            },
+            "enemy": {
+              "id": "boss",
+              "hp": 95
+            },
+            "turn": 2,
+            "phase": "ongoing",
+            "enemyAttacksExecuted": 1
+          },
+          "after": {
+            "player": {
+              "hp": 88,
+              "upgrades": {
+                "blade": 0,
+                "core": 0,
+                "armor": 0
+              },
+              "energy": 1,
+              "energyCap": 4
+            },
+            "enemy": {
+              "id": "boss",
+              "hp": 95
+            },
+            "turn": 3,
+            "phase": "ongoing",
+            "enemyAttacksExecuted": 2
+          },
+          "accepted": true,
+          "effects": {
+            "playerDamage": 0,
+            "enemyIntent": {
+              "kind": "normal",
+              "damage": 12,
+              "attackNumber": 2
+            },
+            "damageTaken": 0
+          },
+          "error": null
+        },
+        {
+          "attempt": 3,
+          "action": "defend",
+          "intentBefore": {
+            "kind": "special",
+            "damage": 22,
+            "attackNumber": 3
+          },
+          "before": {
+            "player": {
+              "hp": 88,
+              "upgrades": {
+                "blade": 0,
+                "core": 0,
+                "armor": 0
+              },
+              "energy": 1,
+              "energyCap": 4
+            },
+            "enemy": {
+              "id": "boss",
+              "hp": 95
+            },
+            "turn": 3,
+            "phase": "ongoing",
+            "enemyAttacksExecuted": 2
+          },
+          "after": {
+            "player": {
+              "hp": 78,
+              "upgrades": {
+                "blade": 0,
+                "core": 0,
+                "armor": 0
+              },
+              "energy": 2,
+              "energyCap": 4
+            },
+            "enemy": {
+              "id": "boss",
+              "hp": 95
+            },
+            "turn": 4,
+            "phase": "ongoing",
+            "enemyAttacksExecuted": 3
+          },
+          "accepted": true,
+          "effects": {
+            "playerDamage": 0,
+            "enemyIntent": {
+              "kind": "special",
+              "damage": 22,
+              "attackNumber": 3
+            },
+            "damageTaken": 10
+          },
+          "error": null
+        },
+        {
+          "attempt": 4,
+          "action": "heavy",
+          "intentBefore": {
+            "kind": "normal",
+            "damage": 12,
+            "attackNumber": 4
+          },
+          "before": {
+            "player": {
+              "hp": 78,
+              "upgrades": {
+                "blade": 0,
+                "core": 0,
+                "armor": 0
+              },
+              "energy": 2,
+              "energyCap": 4
+            },
+            "enemy": {
+              "id": "boss",
+              "hp": 95
+            },
+            "turn": 4,
+            "phase": "ongoing",
+            "enemyAttacksExecuted": 3
+          },
+          "after": {
+            "player": {
+              "hp": 66,
+              "upgrades": {
+                "blade": 0,
+                "core": 0,
+                "armor": 0
+              },
+              "energy": 0,
+              "energyCap": 4
+            },
+            "enemy": {
+              "id": "boss",
+              "hp": 70
+            },
+            "turn": 5,
+            "phase": "ongoing",
+            "enemyAttacksExecuted": 4
+          },
+          "accepted": true,
+          "effects": {
+            "playerDamage": 25,
+            "enemyIntent": {
+              "kind": "normal",
+              "damage": 12,
+              "attackNumber": 4
+            },
+            "damageTaken": 12
+          },
+          "error": null
+        },
+        {
+          "attempt": 5,
+          "action": "defend",
+          "intentBefore": {
+            "kind": "normal",
+            "damage": 12,
+            "attackNumber": 5
+          },
+          "before": {
+            "player": {
+              "hp": 66,
+              "upgrades": {
+                "blade": 0,
+                "core": 0,
+                "armor": 0
+              },
+              "energy": 0,
+              "energyCap": 4
+            },
+            "enemy": {
+              "id": "boss",
+              "hp": 70
+            },
+            "turn": 5,
+            "phase": "ongoing",
+            "enemyAttacksExecuted": 4
+          },
+          "after": {
+            "player": {
+              "hp": 66,
+              "upgrades": {
+                "blade": 0,
+                "core": 0,
+                "armor": 0
+              },
+              "energy": 1,
+              "energyCap": 4
+            },
+            "enemy": {
+              "id": "boss",
+              "hp": 70
+            },
+            "turn": 6,
+            "phase": "ongoing",
+            "enemyAttacksExecuted": 5
+          },
+          "accepted": true,
+          "effects": {
+            "playerDamage": 0,
+            "enemyIntent": {
+              "kind": "normal",
+              "damage": 12,
+              "attackNumber": 5
+            },
+            "damageTaken": 0
+          },
+          "error": null
+        },
+        {
+          "attempt": 6,
+          "action": "defend",
+          "intentBefore": {
+            "kind": "special",
+            "damage": 22,
+            "attackNumber": 6
+          },
+          "before": {
+            "player": {
+              "hp": 66,
+              "upgrades": {
+                "blade": 0,
+                "core": 0,
+                "armor": 0
+              },
+              "energy": 1,
+              "energyCap": 4
+            },
+            "enemy": {
+              "id": "boss",
+              "hp": 70
+            },
+            "turn": 6,
+            "phase": "ongoing",
+            "enemyAttacksExecuted": 5
+          },
+          "after": {
+            "player": {
+              "hp": 56,
+              "upgrades": {
+                "blade": 0,
+                "core": 0,
+                "armor": 0
+              },
+              "energy": 2,
+              "energyCap": 4
+            },
+            "enemy": {
+              "id": "boss",
+              "hp": 70
+            },
+            "turn": 7,
+            "phase": "ongoing",
+            "enemyAttacksExecuted": 6
+          },
+          "accepted": true,
+          "effects": {
+            "playerDamage": 0,
+            "enemyIntent": {
+              "kind": "special",
+              "damage": 22,
+              "attackNumber": 6
+            },
+            "damageTaken": 10
+          },
+          "error": null
+        },
+        {
+          "attempt": 7,
+          "action": "heavy",
+          "intentBefore": {
+            "kind": "normal",
+            "damage": 12,
+            "attackNumber": 7
+          },
+          "before": {
+            "player": {
+              "hp": 56,
+              "upgrades": {
+                "blade": 0,
+                "core": 0,
+                "armor": 0
+              },
+              "energy": 2,
+              "energyCap": 4
+            },
+            "enemy": {
+              "id": "boss",
+              "hp": 70
+            },
+            "turn": 7,
+            "phase": "ongoing",
+            "enemyAttacksExecuted": 6
+          },
+          "after": {
+            "player": {
+              "hp": 44,
+              "upgrades": {
+                "blade": 0,
+                "core": 0,
+                "armor": 0
+              },
+              "energy": 0,
+              "energyCap": 4
+            },
+            "enemy": {
+              "id": "boss",
+              "hp": 45
+            },
+            "turn": 8,
+            "phase": "ongoing",
+            "enemyAttacksExecuted": 7
+          },
+          "accepted": true,
+          "effects": {
+            "playerDamage": 25,
+            "enemyIntent": {
+              "kind": "normal",
+              "damage": 12,
+              "attackNumber": 7
+            },
+            "damageTaken": 12
+          },
+          "error": null
+        },
+        {
+          "attempt": 8,
+          "action": "defend",
+          "intentBefore": {
+            "kind": "normal",
+            "damage": 12,
+            "attackNumber": 8
+          },
+          "before": {
+            "player": {
+              "hp": 44,
+              "upgrades": {
+                "blade": 0,
+                "core": 0,
+                "armor": 0
+              },
+              "energy": 0,
+              "energyCap": 4
+            },
+            "enemy": {
+              "id": "boss",
+              "hp": 45
+            },
+            "turn": 8,
+            "phase": "ongoing",
+            "enemyAttacksExecuted": 7
+          },
+          "after": {
+            "player": {
+              "hp": 44,
+              "upgrades": {
+                "blade": 0,
+                "core": 0,
+                "armor": 0
+              },
+              "energy": 1,
+              "energyCap": 4
+            },
+            "enemy": {
+              "id": "boss",
+              "hp": 45
+            },
+            "turn": 9,
+            "phase": "ongoing",
+            "enemyAttacksExecuted": 8
+          },
+          "accepted": true,
+          "effects": {
+            "playerDamage": 0,
+            "enemyIntent": {
+              "kind": "normal",
+              "damage": 12,
+              "attackNumber": 8
+            },
+            "damageTaken": 0
+          },
+          "error": null
+        },
+        {
+          "attempt": 9,
+          "action": "defend",
+          "intentBefore": {
+            "kind": "special",
+            "damage": 22,
+            "attackNumber": 9
+          },
+          "before": {
+            "player": {
+              "hp": 44,
+              "upgrades": {
+                "blade": 0,
+                "core": 0,
+                "armor": 0
+              },
+              "energy": 1,
+              "energyCap": 4
+            },
+            "enemy": {
+              "id": "boss",
+              "hp": 45
+            },
+            "turn": 9,
+            "phase": "ongoing",
+            "enemyAttacksExecuted": 8
+          },
+          "after": {
+            "player": {
+              "hp": 34,
+              "upgrades": {
+                "blade": 0,
+                "core": 0,
+                "armor": 0
+              },
+              "energy": 2,
+              "energyCap": 4
+            },
+            "enemy": {
+              "id": "boss",
+              "hp": 45
+            },
+            "turn": 10,
+            "phase": "ongoing",
+            "enemyAttacksExecuted": 9
+          },
+          "accepted": true,
+          "effects": {
+            "playerDamage": 0,
+            "enemyIntent": {
+              "kind": "special",
+              "damage": 22,
+              "attackNumber": 9
+            },
+            "damageTaken": 10
+          },
+          "error": null
+        },
+        {
+          "attempt": 10,
+          "action": "heavy",
+          "intentBefore": {
+            "kind": "normal",
+            "damage": 12,
+            "attackNumber": 10
+          },
+          "before": {
+            "player": {
+              "hp": 34,
+              "upgrades": {
+                "blade": 0,
+                "core": 0,
+                "armor": 0
+              },
+              "energy": 2,
+              "energyCap": 4
+            },
+            "enemy": {
+              "id": "boss",
+              "hp": 45
+            },
+            "turn": 10,
+            "phase": "ongoing",
+            "enemyAttacksExecuted": 9
+          },
+          "after": {
+            "player": {
+              "hp": 22,
+              "upgrades": {
+                "blade": 0,
+                "core": 0,
+                "armor": 0
+              },
+              "energy": 0,
+              "energyCap": 4
+            },
+            "enemy": {
+              "id": "boss",
+              "hp": 20
+            },
+            "turn": 11,
+            "phase": "ongoing",
+            "enemyAttacksExecuted": 10
+          },
+          "accepted": true,
+          "effects": {
+            "playerDamage": 25,
+            "enemyIntent": {
+              "kind": "normal",
+              "damage": 12,
+              "attackNumber": 10
+            },
+            "damageTaken": 12
+          },
+          "error": null
+        },
+        {
+          "attempt": 11,
+          "action": "defend",
+          "intentBefore": {
+            "kind": "normal",
+            "damage": 12,
+            "attackNumber": 11
+          },
+          "before": {
+            "player": {
+              "hp": 22,
+              "upgrades": {
+                "blade": 0,
+                "core": 0,
+                "armor": 0
+              },
+              "energy": 0,
+              "energyCap": 4
+            },
+            "enemy": {
+              "id": "boss",
+              "hp": 20
+            },
+            "turn": 11,
+            "phase": "ongoing",
+            "enemyAttacksExecuted": 10
+          },
+          "after": {
+            "player": {
+              "hp": 22,
+              "upgrades": {
+                "blade": 0,
+                "core": 0,
+                "armor": 0
+              },
+              "energy": 1,
+              "energyCap": 4
+            },
+            "enemy": {
+              "id": "boss",
+              "hp": 20
+            },
+            "turn": 12,
+            "phase": "ongoing",
+            "enemyAttacksExecuted": 11
+          },
+          "accepted": true,
+          "effects": {
+            "playerDamage": 0,
+            "enemyIntent": {
+              "kind": "normal",
+              "damage": 12,
+              "attackNumber": 11
+            },
+            "damageTaken": 0
+          },
+          "error": null
+        },
+        {
+          "attempt": 12,
+          "action": "defend",
+          "intentBefore": {
+            "kind": "special",
+            "damage": 22,
+            "attackNumber": 12
+          },
+          "before": {
+            "player": {
+              "hp": 22,
+              "upgrades": {
+                "blade": 0,
+                "core": 0,
+                "armor": 0
+              },
+              "energy": 1,
+              "energyCap": 4
+            },
+            "enemy": {
+              "id": "boss",
+              "hp": 20
+            },
+            "turn": 12,
+            "phase": "ongoing",
+            "enemyAttacksExecuted": 11
+          },
+          "after": {
+            "player": {
+              "hp": 12,
+              "upgrades": {
+                "blade": 0,
+                "core": 0,
+                "armor": 0
+              },
+              "energy": 2,
+              "energyCap": 4
+            },
+            "enemy": {
+              "id": "boss",
+              "hp": 20
+            },
+            "turn": 13,
+            "phase": "ongoing",
+            "enemyAttacksExecuted": 12
+          },
+          "accepted": true,
+          "effects": {
+            "playerDamage": 0,
+            "enemyIntent": {
+              "kind": "special",
+              "damage": 22,
+              "attackNumber": 12
+            },
+            "damageTaken": 10
+          },
+          "error": null
+        },
+        {
+          "attempt": 13,
+          "action": "heavy",
+          "intentBefore": {
+            "kind": "normal",
+            "damage": 12,
+            "attackNumber": 13
+          },
+          "before": {
+            "player": {
+              "hp": 12,
+              "upgrades": {
+                "blade": 0,
+                "core": 0,
+                "armor": 0
+              },
+              "energy": 2,
+              "energyCap": 4
+            },
+            "enemy": {
+              "id": "boss",
+              "hp": 20
+            },
+            "turn": 13,
+            "phase": "ongoing",
+            "enemyAttacksExecuted": 12
+          },
+          "after": {
+            "player": {
+              "hp": 12,
+              "upgrades": {
+                "blade": 0,
+                "core": 0,
+                "armor": 0
+              },
+              "energy": 0,
+              "energyCap": 4
+            },
+            "enemy": {
+              "id": "boss",
+              "hp": -5
+            },
+            "turn": 14,
+            "phase": "victory",
+            "enemyAttacksExecuted": 12
+          },
+          "accepted": true,
+          "effects": {
+            "playerDamage": 25,
+            "enemyIntent": null,
+            "damageTaken": 0
+          },
+          "error": null
+        }
+      ]
+    },
+    {
+      "summary": {
+        "enemyId": "boss",
+        "strategyId": "C",
+        "initialPlayerHp": 100,
+        "initialEnergy": 2,
+        "initialEnergyCap": 4,
+        "initialEnemyHp": 120,
+        "outcome": "defeat",
+        "actionAttempts": 7,
+        "playerActions": 7,
+        "enemyAttacks": 7,
+        "playerHp": -4,
+        "enemyHp": 45,
+        "finalEnergy": 4,
+        "totalDamageTaken": 100,
+        "totalDamageDealt": 75,
+        "rawHpLossTaken": 104,
+        "rawHpLossDealt": 75,
+        "attackCount": 0,
+        "heavyCount": 3,
+        "defendCount": 0,
+        "chargeCount": 4,
+        "bossNormalAttacks": 5,
+        "bossSpecialAttacks": 2,
+        "reason": null,
+        "strategyLabel": "G (implemented by C)",
+        "finalPhase": "defeat",
+        "overkillDamageDealt": 0,
+        "overkillDamageTaken": 4
+      },
+      "initialState": {
+        "player": {
+          "hp": 100,
+          "upgrades": {
+            "blade": 0,
+            "core": 0,
+            "armor": 0
+          },
+          "energy": 2,
+          "energyCap": 4
+        },
+        "enemy": {
+          "id": "boss",
+          "hp": 120
+        },
+        "turn": 1,
+        "phase": "ongoing",
+        "enemyAttacksExecuted": 0
+      },
+      "finalState": {
+        "player": {
+          "hp": -4,
+          "upgrades": {
+            "blade": 0,
+            "core": 0,
+            "armor": 0
+          },
+          "energy": 4,
+          "energyCap": 4
+        },
+        "enemy": {
+          "id": "boss",
+          "hp": 45
+        },
+        "turn": 8,
+        "phase": "defeat",
+        "enemyAttacksExecuted": 7
+      },
+      "actions": [
+        {
+          "attempt": 1,
+          "action": "charge",
+          "intentBefore": {
+            "kind": "normal",
+            "damage": 12,
+            "attackNumber": 1
+          },
+          "before": {
+            "player": {
+              "hp": 100,
+              "upgrades": {
+                "blade": 0,
+                "core": 0,
+                "armor": 0
+              },
+              "energy": 2,
+              "energyCap": 4
+            },
+            "enemy": {
+              "id": "boss",
+              "hp": 120
+            },
+            "turn": 1,
+            "phase": "ongoing",
+            "enemyAttacksExecuted": 0
+          },
+          "after": {
+            "player": {
+              "hp": 88,
+              "upgrades": {
+                "blade": 0,
+                "core": 0,
+                "armor": 0
+              },
+              "energy": 4,
+              "energyCap": 4
+            },
+            "enemy": {
+              "id": "boss",
+              "hp": 120
+            },
+            "turn": 2,
+            "phase": "ongoing",
+            "enemyAttacksExecuted": 1
+          },
+          "accepted": true,
+          "effects": {
+            "playerDamage": 0,
+            "enemyIntent": {
+              "kind": "normal",
+              "damage": 12,
+              "attackNumber": 1
+            },
+            "damageTaken": 12
+          },
+          "error": null
+        },
+        {
+          "attempt": 2,
+          "action": "heavy",
+          "intentBefore": {
+            "kind": "normal",
+            "damage": 12,
+            "attackNumber": 2
+          },
+          "before": {
+            "player": {
+              "hp": 88,
+              "upgrades": {
+                "blade": 0,
+                "core": 0,
+                "armor": 0
+              },
+              "energy": 4,
+              "energyCap": 4
+            },
+            "enemy": {
+              "id": "boss",
+              "hp": 120
+            },
+            "turn": 2,
+            "phase": "ongoing",
+            "enemyAttacksExecuted": 1
+          },
+          "after": {
+            "player": {
+              "hp": 76,
+              "upgrades": {
+                "blade": 0,
+                "core": 0,
+                "armor": 0
+              },
+              "energy": 2,
+              "energyCap": 4
+            },
+            "enemy": {
+              "id": "boss",
+              "hp": 95
+            },
+            "turn": 3,
+            "phase": "ongoing",
+            "enemyAttacksExecuted": 2
+          },
+          "accepted": true,
+          "effects": {
+            "playerDamage": 25,
+            "enemyIntent": {
+              "kind": "normal",
+              "damage": 12,
+              "attackNumber": 2
+            },
+            "damageTaken": 12
+          },
+          "error": null
+        },
+        {
+          "attempt": 3,
+          "action": "charge",
+          "intentBefore": {
+            "kind": "special",
+            "damage": 22,
+            "attackNumber": 3
+          },
+          "before": {
+            "player": {
+              "hp": 76,
+              "upgrades": {
+                "blade": 0,
+                "core": 0,
+                "armor": 0
+              },
+              "energy": 2,
+              "energyCap": 4
+            },
+            "enemy": {
+              "id": "boss",
+              "hp": 95
+            },
+            "turn": 3,
+            "phase": "ongoing",
+            "enemyAttacksExecuted": 2
+          },
+          "after": {
+            "player": {
+              "hp": 54,
+              "upgrades": {
+                "blade": 0,
+                "core": 0,
+                "armor": 0
+              },
+              "energy": 4,
+              "energyCap": 4
+            },
+            "enemy": {
+              "id": "boss",
+              "hp": 95
+            },
+            "turn": 4,
+            "phase": "ongoing",
+            "enemyAttacksExecuted": 3
+          },
+          "accepted": true,
+          "effects": {
+            "playerDamage": 0,
+            "enemyIntent": {
+              "kind": "special",
+              "damage": 22,
+              "attackNumber": 3
+            },
+            "damageTaken": 22
+          },
+          "error": null
+        },
+        {
+          "attempt": 4,
+          "action": "heavy",
+          "intentBefore": {
+            "kind": "normal",
+            "damage": 12,
+            "attackNumber": 4
+          },
+          "before": {
+            "player": {
+              "hp": 54,
+              "upgrades": {
+                "blade": 0,
+                "core": 0,
+                "armor": 0
+              },
+              "energy": 4,
+              "energyCap": 4
+            },
+            "enemy": {
+              "id": "boss",
+              "hp": 95
+            },
+            "turn": 4,
+            "phase": "ongoing",
+            "enemyAttacksExecuted": 3
+          },
+          "after": {
+            "player": {
+              "hp": 42,
+              "upgrades": {
+                "blade": 0,
+                "core": 0,
+                "armor": 0
+              },
+              "energy": 2,
+              "energyCap": 4
+            },
+            "enemy": {
+              "id": "boss",
+              "hp": 70
+            },
+            "turn": 5,
+            "phase": "ongoing",
+            "enemyAttacksExecuted": 4
+          },
+          "accepted": true,
+          "effects": {
+            "playerDamage": 25,
+            "enemyIntent": {
+              "kind": "normal",
+              "damage": 12,
+              "attackNumber": 4
+            },
+            "damageTaken": 12
+          },
+          "error": null
+        },
+        {
+          "attempt": 5,
+          "action": "charge",
+          "intentBefore": {
+            "kind": "normal",
+            "damage": 12,
+            "attackNumber": 5
+          },
+          "before": {
+            "player": {
+              "hp": 42,
+              "upgrades": {
+                "blade": 0,
+                "core": 0,
+                "armor": 0
+              },
+              "energy": 2,
+              "energyCap": 4
+            },
+            "enemy": {
+              "id": "boss",
+              "hp": 70
+            },
+            "turn": 5,
+            "phase": "ongoing",
+            "enemyAttacksExecuted": 4
+          },
+          "after": {
+            "player": {
+              "hp": 30,
+              "upgrades": {
+                "blade": 0,
+                "core": 0,
+                "armor": 0
+              },
+              "energy": 4,
+              "energyCap": 4
+            },
+            "enemy": {
+              "id": "boss",
+              "hp": 70
+            },
+            "turn": 6,
+            "phase": "ongoing",
+            "enemyAttacksExecuted": 5
+          },
+          "accepted": true,
+          "effects": {
+            "playerDamage": 0,
+            "enemyIntent": {
+              "kind": "normal",
+              "damage": 12,
+              "attackNumber": 5
+            },
+            "damageTaken": 12
+          },
+          "error": null
+        },
+        {
+          "attempt": 6,
+          "action": "heavy",
+          "intentBefore": {
+            "kind": "special",
+            "damage": 22,
+            "attackNumber": 6
+          },
+          "before": {
+            "player": {
+              "hp": 30,
+              "upgrades": {
+                "blade": 0,
+                "core": 0,
+                "armor": 0
+              },
+              "energy": 4,
+              "energyCap": 4
+            },
+            "enemy": {
+              "id": "boss",
+              "hp": 70
+            },
+            "turn": 6,
+            "phase": "ongoing",
+            "enemyAttacksExecuted": 5
+          },
+          "after": {
+            "player": {
+              "hp": 8,
+              "upgrades": {
+                "blade": 0,
+                "core": 0,
+                "armor": 0
+              },
+              "energy": 2,
+              "energyCap": 4
+            },
+            "enemy": {
+              "id": "boss",
+              "hp": 45
+            },
+            "turn": 7,
+            "phase": "ongoing",
+            "enemyAttacksExecuted": 6
+          },
+          "accepted": true,
+          "effects": {
+            "playerDamage": 25,
+            "enemyIntent": {
+              "kind": "special",
+              "damage": 22,
+              "attackNumber": 6
+            },
+            "damageTaken": 22
+          },
+          "error": null
+        },
+        {
+          "attempt": 7,
+          "action": "charge",
+          "intentBefore": {
+            "kind": "normal",
+            "damage": 12,
+            "attackNumber": 7
+          },
+          "before": {
+            "player": {
+              "hp": 8,
+              "upgrades": {
+                "blade": 0,
+                "core": 0,
+                "armor": 0
+              },
+              "energy": 2,
+              "energyCap": 4
+            },
+            "enemy": {
+              "id": "boss",
+              "hp": 45
+            },
+            "turn": 7,
+            "phase": "ongoing",
+            "enemyAttacksExecuted": 6
+          },
+          "after": {
+            "player": {
+              "hp": -4,
+              "upgrades": {
+                "blade": 0,
+                "core": 0,
+                "armor": 0
+              },
+              "energy": 4,
+              "energyCap": 4
+            },
+            "enemy": {
+              "id": "boss",
+              "hp": 45
+            },
+            "turn": 8,
+            "phase": "defeat",
+            "enemyAttacksExecuted": 7
+          },
+          "accepted": true,
+          "effects": {
+            "playerDamage": 0,
+            "enemyIntent": {
+              "kind": "normal",
+              "damage": 12,
+              "attackNumber": 7
+            },
+            "damageTaken": 12
+          },
+          "error": null
+        }
+      ]
+    }
+  ]
+}
