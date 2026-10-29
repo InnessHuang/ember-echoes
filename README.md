@@ -10,9 +10,10 @@ A playable game design and numerical balancing project.
 
 - 已完成（Task 01）：设计规范、基础工程、占位首页。
 - Task 02：集中配置、纯 TypeScript 战斗引擎和 Vitest 规则测试已实现，28 项测试、lint 和类型检查通过；生产构建暂时明确使用 Webpack，普通 `npm run build` 已通过，Task 02 验收完成。详见测试计划。
-- 计划中（Task 03 起）：浏览器可玩界面、三战流程、Python 模拟、数值迭代和部署。
+- Task 03：单场战斗页面已接入现有引擎，包含意图、四种行动、结算日志、胜负与重开；已完成 Chromium 桌面与手机尺寸交互验收，设计者认可当前视觉方向。
+- 计划中（Task 04 起）：三战流程与升级选择、Python 模拟、数值迭代和部署。
 
-**浏览器可玩战斗界面尚未完成。** 当前首页仍为占位页面；没有完整三战流程控制器或 Python 模拟器。
+**首页现为单场战斗 Demo。** 固定对战轻型敌人“失落的战士”，不包含完整三战流程、战后升级选择、存档或 Python 模拟器。
 
 ## 技术栈与运行
 
@@ -50,7 +51,9 @@ npm run build
 - `lib/game/types.ts`：进度、战斗、意图及行动结果类型。
 - `lib/game/engine.ts`：独立纯函数，无 React、Next.js、DOM、网络或随机依赖。
 - `tests/game-engine.test.ts`：确定性规则与不可变性测试。
-- `app/`：现有占位首页；`docs/`：设计、数值、测试和路线。
+- `components/battle/`：交互入口、状态/行动/日志/结果面板、原创 SVG 战场和日志适配器。
+- `tests/battle-ui.test.ts`：Node 环境下的渲染、按钮回调和引擎状态流测试。
+- `app/`：单场战斗页面与响应式样式；`docs/`：设计、数值、测试和路线。
 
 公开 API：`createInitialProgress()` 初始化或重开；`applyUpgrade(progress, id)` 累计升级；`startBattle(enemyId, progress)` 保留生命和升级、重置能量为 2；`getEnemyIntent(state)` 预告下一次攻击（终局为 null）；`performAction(state, actionId)` 校验和结算单次行动；`getPlayerProgress(state)` 提取生命与升级供下一场使用。拒绝行动返回原状态和原因，不推进回合。行动 ID 为 attack（普攻）、heavy（重击）、defend（防御）、charge（蓄能）。
 
@@ -69,3 +72,9 @@ npm run build
 ## 工具兼容性说明
 
 当前 Next.js lint 插件的 peer 范围尚不支持 ESLint 10，因此固定 ESLint 9.39.5。该版本已被 npm 标记为上游停止支持；待插件兼容更新后再升级，不以强制忽略 peer 依赖解决。规则测试已在 Task 02 补齐。
+
+## 单场体验与验证边界
+
+运行 `npm ci`、`npm run dev` 后在浏览器打开 http://localhost:3000。观察下一次敌方意图，点击普通攻击、重击、防御或蓄能；能量不足的重击可点击查看原因，不推进战斗。胜负后行动禁用，点击“重新开始”恢复完整初始状态。规则入口支持原生 details 展开，按钮支持 Tab/Enter，系统设置减少动态效果时停用动画。
+
+也可运行 `npm run build` 后用 `npm start` 体验生产版本。build 继续使用 Webpack。Task 03 验收与人工检查清单见 [测试计划](docs/TEST_PLAN.md)。未增加浏览器测试依赖；另使用环境预装的 Chromium/Playwright 验证了真实浏览器交互。Safari、Firefox 和真实手机设备仍未验证。
