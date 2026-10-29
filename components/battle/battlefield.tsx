@@ -1,3 +1,5 @@
+import { ENEMY_LABELS } from "./enemies";
+import type { EnemyId } from "../../lib/game/types";
 import React from "react";
 
 export function Warrior({ enemy = false }: { enemy?: boolean }) {
@@ -24,9 +26,9 @@ export function Warrior({ enemy = false }: { enemy?: boolean }) {
     </svg>
   );
 }
-export function Battlefield({ phase, turn }: { phase: string; turn: number }) {
+export function Battlefield({ phase, turn, enemyId = "light" }: { phase: string; turn: number; enemyId?: EnemyId }) {
   return (
-    <section className={`battlefield ${phase}`} aria-label="战场：面具旅人与失落甲虫战士对峙">
+    <section className={`battlefield ${phase}`} aria-label={`战场：面具旅人与${ENEMY_LABELS[enemyId].name}对峙`}>
       <RuinBackdrop />
       <div className="distant-arch arch-one" /><div className="distant-arch arch-two" /><div className="distant-arch arch-three" />
       <div className="ruin-pillar pillar-left" /><div className="ruin-pillar pillar-right" />
@@ -34,7 +36,7 @@ export function Battlefield({ phase, turn }: { phase: string; turn: number }) {
       <div className="mist" /><div className="ground" />
       <div className="arena-caption"><span>遗忘回廊</span><span>THE FORGOTTEN PASSAGE</span></div>
       <div className="combatant traveler"><Warrior /><span>面具旅人</span></div>
-      <div className="combatant beetle"><Warrior enemy /><span>失落的战士</span></div>
+      <div className="combatant beetle"><Warrior enemy /><span>{ENEMY_LABELS[enemyId].name}</span></div>
       <div className="turn-marker">{phase === "ongoing" ? `回合 ${String(turn).padStart(2, "0")} · 由你行动` : "战斗已结束"}</div>
     </section>
   );

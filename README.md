@@ -11,9 +11,10 @@ A playable game design and numerical balancing project.
 - 已完成（Task 01）：设计规范、基础工程、占位首页。
 - Task 02：集中配置、纯 TypeScript 战斗引擎和 Vitest 规则测试已实现，28 项测试、lint 和类型检查通过；生产构建暂时明确使用 Webpack，普通 `npm run build` 已通过，Task 02 验收完成。详见测试计划。
 - Task 03：单场战斗页面已接入现有引擎，包含意图、四种行动、结算日志、胜负与重开；已完成 Chromium 桌面与手机尺寸交互验收，设计者认可当前视觉方向。
-- 计划中（Task 04 起）：三战流程与升级选择、Python 模拟、数值迭代和部署。
+- Task 04A/04B/04C-1：确定性策略模拟与分析已完成，历史实验数据保持不变。
+- Task 05：三战挑战与两次升级选择已实现，待审核；Python 模拟、参数扫描及部署尚未实现。
 
-**首页现为单场战斗 Demo。** 固定对战轻型敌人“失落的战士”，不包含完整三战流程、战后升级选择、存档或 Python 模拟器。
+**首页现为完整三战挑战。** 依次面对轻型“失落的战士”、重型“遗迹重卫”和 Boss“回廊守望者”。前两战胜利后各选择一次锋刃、核心或护甲，确认即进入下一战；Boss 胜利直接通关。生命不恢复，每场能量重置为 2，升级保留；任意失败结束挑战，重开全部归零。不包含存档或 Python 模拟器。
 
 ## 技术栈与运行
 
@@ -43,7 +44,7 @@ npm test
 npm run build
 ```
 
-`npm test` 运行 `tests/game-engine.test.ts` 的真实规则测试；`typecheck` 先生成 Next 路由类型，支持干净安装后执行。
+`npm test` 运行真实规则、UI、挑战流程与模拟器测试；`typecheck` 先生成 Next 路由类型，支持干净安装后执行。
 
 ## 目录与规则 API
 
@@ -53,7 +54,9 @@ npm run build
 - `tests/game-engine.test.ts`：确定性规则与不可变性测试。
 - `components/battle/`：交互入口、状态/行动/日志/结果面板、原创 SVG 战场和日志适配器。
 - `tests/battle-ui.test.ts`：Node 环境下的渲染、按钮回调和引擎状态流测试。
-- `app/`：单场战斗页面与响应式样式；`docs/`：设计、数值、测试和路线。
+- `lib/challenge/controller.ts`：独立挑战阶段、升级门禁和跨战初始化。
+- `tests/challenge.test.ts`：真实引擎三战通关、失败、继承和重开测试。
+- `app/`：三战挑战页面与响应式样式；`docs/`：设计、数值、测试和路线。
 
 公开 API：`createInitialProgress()` 初始化或重开；`applyUpgrade(progress, id)` 累计升级；`startBattle(enemyId, progress)` 保留生命和升级、重置能量为 2；`getEnemyIntent(state)` 预告下一次攻击（终局为 null）；`performAction(state, actionId)` 校验和结算单次行动；`getPlayerProgress(state)` 提取生命与升级供下一场使用。拒绝行动返回原状态和原因，不推进回合。行动 ID 为 attack（普攻）、heavy（重击）、defend（防御）、charge（蓄能）。
 
@@ -73,15 +76,15 @@ npm run build
 
 当前 Next.js lint 插件的 peer 范围尚不支持 ESLint 10，因此固定 ESLint 9.39.5。该版本已被 npm 标记为上游停止支持；待插件兼容更新后再升级，不以强制忽略 peer 依赖解决。规则测试已在 Task 02 补齐。
 
-## 单场体验与验证边界
+## 挑战体验与验证边界
 
-运行 `npm ci`、`npm run dev` 后在浏览器打开 http://localhost:3000。观察下一次敌方意图，点击普通攻击、重击、防御或蓄能；能量不足的重击可点击查看原因，不推进战斗。胜负后行动禁用，点击“重新开始”恢复完整初始状态。规则入口支持原生 details 展开，按钮支持 Tab/Enter，系统设置减少动态效果时停用动画。
+运行 `npm ci`、`npm run dev` 后在浏览器打开 http://localhost:3000。观察下一次敌方意图，点击普通攻击、重击、防御或蓄能；能量不足的重击可点击查看原因，不推进战斗。每战胜利后行动禁用：前两战必须确认升级才能继续，Boss 胜利直接通关。挑战结束时点击“重新开始”恢复完整初始状态。规则入口支持原生 details 展开，按钮支持 Tab/Enter，系统设置减少动态效果时停用动画。
 
-也可运行 `npm run build` 后用 `npm start` 体验生产版本。build 继续使用 Webpack。Task 03 验收与人工检查清单见 [测试计划](docs/TEST_PLAN.md)。未增加浏览器测试依赖；另使用环境预装的 Chromium/Playwright 验证了真实浏览器交互。Safari、Firefox 和真实手机设备仍未验证。
+也可运行 `npm run build` 后用 `npm start` 体验生产版本。build 继续使用 Webpack。Task 05 本次验收为 142 项测试通过，lint、typecheck 与 Webpack 生产构建通过；Chromium 已验证三战通关、两次升级、失败重开、键盘操作和 390px/320px 响应式布局。详细验收与人工检查清单见 [测试计划](docs/TEST_PLAN.md)。未增加浏览器测试依赖；另使用环境预装的 Chromium/Playwright 验证了真实浏览器交互。Safari、Firefox 和真实手机设备仍未验证。
 
 ## Task 04A：确定性平衡基线
 
-已新增独立 TypeScript 模拟器，使用现有规则引擎运行三种敌人 × 四种固定策略的 12 场基线，保留 63 次完整行动记录。参数与 UI 均未调整；这不是 Python 模拟器或完整三战流程。
+已新增独立 TypeScript 模拟器，使用现有规则引擎运行三种敌人 × 四种固定策略的 12 场基线，保留 63 次完整行动记录。参数与 UI 均未调整；该分析支线不是 Python 模拟器，也不运行挑战流程。
 
 ```sh
 node scripts/run-baseline.mjs

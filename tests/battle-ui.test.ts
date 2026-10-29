@@ -4,6 +4,7 @@ import { describe, expect, it, vi } from "vitest";
 import BattleDemo from "../components/battle/battle-demo";
 import { ActionPanel, BattleLog, BattleResult, StatusPanels } from "../components/battle/panels";
 import { createSession, sessionReducer } from "../components/battle/session";
+import { UpgradePanel } from "../components/battle/upgrade-panel";
 import * as engine from "../lib/game/engine";
 import type { ActionId } from "../lib/game/types";
 
@@ -94,10 +95,10 @@ describe("battle UI with existing node-only tools", () => {
   it("result restart callback restores initial battle, feedback and empty log", () => {
     let session = createSession();
     for (const action of ["heavy", "attack", "attack"] as const) session = click(session, action);
-    const result = BattleResult({ phase: session.battle.phase, onRestart: () => { session = sessionReducer(session, { type: "restart" }); } });
+    const result = BattleResult({ phase: session.battle.phase, onRestart: () => { session = sessionReducer(session, { type: "restart", challengeId: Symbol("restart") }); } });
     const button = result!.props.children.find((child: { type: string }) => child.type === "button");
     button.props.onClick();
-    expect(session).toEqual(createSession());
+    expect(session).toEqual(createSession(session.challengeId));
   });
   it("never records a preview as an executed attack", () => {
     const session = createSession();
@@ -116,5 +117,42 @@ describe("battle UI with existing node-only tools", () => {
       expect(network).not.toHaveBeenCalled();
       expect(random).not.toHaveBeenCalled();
     } finally { random.mockRestore(); network.mockRestore(); }
+  });
+});
+
+
+describe("challenge UI transitions", () => {
+  function win(session = createSession()) {
+    for (let n = 0; n < 200 && session.phase === "battle"; n++) session = click(session, session.battle.player.energy >= 2 ? "heavy" : "defend");
+    return session;
+  }
+  it("actual upgrade buttons transition to heavy and duplicate clicks are ignored", () => {
+    let session = win();
+    expect(session.phase).toBe("upgrade");
+    const panel = UpgradePanel({ progress: session.battle.player, encounter: session.encounter, challengeId: session.challengeId, onSelect: (upgrade, encounter, challengeId) => { session = sessionReducer(session, { type: "upgrade", upgrade, encounter, challengeId }); } });
+    const html = renderToStaticMarkup(panel);
+    for (const label of ["Blade", "Core", "Armor", "当前等级 0", "选择一次升级"]) expect(html).toContain(label);
+    const armor = panel.props.children[2].props.children.find((child: {key: string}) => child.key === "armor");
+    const hp = session.battle.player.hp;
+    armor.props.onClick();
+    expect(session.phase).toBe("battle"); expect(session.battle.player.hp).toBe(hp);
+    expect(session.battle.player.energy).toBe(2); expect(markup(session)).toContain("遗迹重卫");
+    const after = session; armor.props.onClick(); expect(session).toBe(after);
+    expect(session.feedback).toContain("护甲");
+    session = win(session);
+    session = sessionReducer(session, { type: "upgrade", upgrade: "armor", encounter: 1, challengeId: session.challengeId });
+    expect(markup(session)).toContain("回廊守望者"); expect(markup(session)).toContain('value="120"');
+    session = win(session); expect(session.phase).toBe("victory");
+    expect(sessionReducer(session, { type: "upgrade", upgrade: "blade", encounter: 2, challengeId: session.challengeId })).toBe(session);
+    const id = Symbol("restart");
+    expect(sessionReducer(session, { type: "restart", challengeId: id })).toEqual(createSession(id));
+  });
+  it("restart after a real failure clears logs, upgrades and feedback", () => {
+    let session = win();
+    session = sessionReducer(session, { type: "upgrade", upgrade: "core", encounter: 0, challengeId: session.challengeId });
+    while (session.phase === "battle") session = click(session, "charge");
+    expect(session.phase).toBe("defeat"); expect(session.logs.length).toBeGreaterThan(0);
+    const id = Symbol("restart");
+    expect(sessionReducer(session, { type: "restart", challengeId: id })).toEqual(createSession(id));
   });
 });
