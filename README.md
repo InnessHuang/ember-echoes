@@ -8,11 +8,11 @@ A playable game design and numerical balancing project.
 
 ## 当前状态
 
-- 已完成（Task 01 交付内容）：设计与数值规范、后续测试计划、开发路线、基础工程、占位首页。
-- 进行中：阶段 1 交付审查，等待负责人确认。
-- 计划中：规则引擎、可玩界面、三战成长、Python 模拟、数值迭代和部署。
+- 已完成（Task 01）：设计规范、基础工程、占位首页。
+- Task 02：集中配置、纯 TypeScript 战斗引擎和 Vitest 规则测试已实现，28 项测试、lint 和类型检查通过；生产构建暂时明确使用 Webpack，普通 `npm run build` 已通过，Task 02 验收完成。详见测试计划。
+- 计划中（Task 03 起）：浏览器可玩界面、三战流程、Python 模拟、数值迭代和部署。
 
-**战斗 Demo 尚未实现。** 当前没有战斗逻辑、状态机、运行时游戏参数配置、自动化规则测试或 Python 模拟器。
+**浏览器可玩战斗界面尚未完成。** 当前首页仍为占位页面；没有完整三战流程控制器或 Python 模拟器。
 
 ## 技术栈与运行
 
@@ -31,6 +31,8 @@ npm run build
 npm run start
 ```
 
+由于当前 Codex 云环境中 Turbopack 的 PostCSS 子进程 socket 绑定出现权限错误，`build` 脚本暂时明确使用 `next build --webpack`。这不代表 Turbopack 构建已通过；开发脚本、Next.js 与 PostCSS 配置及依赖版本保持不变。
+
 检查：
 
 ```sh
@@ -40,24 +42,21 @@ npm test
 npm run build
 ```
 
-当前 `npm test` 因无测试文件而非零退出，这是“尚无实际测试”，不是规则测试通过。后续测试放入 `tests/**/*.test.ts`。`typecheck` 先生成 Next 路由类型，支持干净安装后独立执行。
+`npm test` 运行 `tests/game-engine.test.ts` 的真实规则测试；`typecheck` 先生成 Next 路由类型，支持干净安装后执行。
 
-## 目录与边界
+## 目录与规则 API
 
-```text
-app/                    路由、布局、全局样式和静态占位首页
-data/README.md          后续集中配置的约定（尚无运行时配置）
-docs/GAME_DESIGN.md      玩法定位与设计边界
-docs/NUMERICAL_SPEC.md   精确参数、结算、边界与待确认项
-docs/TEST_PLAN.md        后续规则与一致性测试计划
-docs/ROADMAP.md          分阶段交付与验收
-```
+- `data/game-config.ts`：冻结的基础参数。
+- `lib/game/types.ts`：进度、战斗、意图及行动结果类型。
+- `lib/game/engine.ts`：独立纯函数，无 React、Next.js、DOM、网络或随机依赖。
+- `tests/game-engine.test.ts`：确定性规则与不可变性测试。
+- `app/`：现有占位首页；`docs/`：设计、数值、测试和路线。
 
-后续按需要增加 `components/`（复用界面）、`lib/`（独立规则）、`tests/`（自动化测试）和 `scripts/`（模拟与分析入口），不预建空目录。基础参数将集中在 data/ 的 JSON 或 TypeScript 配置，规则加成与状态由独立引擎管理，组件不得复制战斗计算。
+公开 API：`createInitialProgress()` 初始化或重开；`applyUpgrade(progress, id)` 累计升级；`startBattle(enemyId, progress)` 保留生命和升级、重置能量为 2；`getEnemyIntent(state)` 预告下一次攻击（终局为 null）；`performAction(state, actionId)` 校验和结算单次行动；`getPlayerProgress(state)` 提取生命与升级供下一场使用。拒绝行动返回原状态和原因，不推进回合。行动 ID 为 attack（普攻）、heavy（重击）、defend（防御）、charge（蓄能）。
 
 ## 后续路线
 
-1. 设计规范与工程基础（本次，待审查）。
+1. 设计规范与工程基础（Task 01 已完成）。
 2. 纯 TypeScript 战斗规则引擎。
 3. 浏览器可玩战斗界面。
 4. 三场战斗与成长流程。
@@ -65,8 +64,8 @@ docs/ROADMAP.md          分阶段交付与验收
 6. 数值迭代与结果验证。
 7. 部署和作品集整理。
 
-详细验收见 [路线](docs/ROADMAP.md)，规则见 [游戏设计](docs/GAME_DESIGN.md) 与 [数值规范](docs/NUMERICAL_SPEC.md)，测试见 [测试计划](docs/TEST_PLAN.md)。跨战斗能量继承或重置尚未指定，须在相关实现前确认。本次不自动进入下一阶段。
+详细验收见 [路线](docs/ROADMAP.md)，规则见 [游戏设计](docs/GAME_DESIGN.md) 与 [数值规范](docs/NUMERICAL_SPEC.md)，测试见 [测试计划](docs/TEST_PLAN.md)。跨战斗能量已确认每场重置为 2，生命与升级保留。本次不自动进入下一阶段。
 
 ## 工具兼容性说明
 
-当前 Next.js lint 插件的 peer 范围尚不支持 ESLint 10，因此固定 ESLint 9.39.5。该版本已被 npm 标记为上游停止支持；待插件兼容更新后再升级，不以强制忽略 peer 依赖解决。当前无实际规则测试，后续阶段需补齐。
+当前 Next.js lint 插件的 peer 范围尚不支持 ESLint 10，因此固定 ESLint 9.39.5。该版本已被 npm 标记为上游停止支持；待插件兼容更新后再升级，不以强制忽略 peer 依赖解决。规则测试已在 Task 02 补齐。

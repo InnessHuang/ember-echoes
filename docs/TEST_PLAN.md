@@ -1,10 +1,10 @@
 # 测试计划
 
-Task 01 只建立计划和 Vitest 入口，目前没有实际测试文件。以下均为待实现案例，不代表已通过。工程检查与生产构建结果见 PR / 交付报告。
+Task 02 的实际规则测试位于 `tests/game-engine.test.ts`。规则验收案例中 R01–R11、R13 及 R12/R14 的底层进度与初始化行为已覆盖；升级选择门禁、三战流程和 R15 尚未实现。工程检查结果见本文件末尾与交付报告。
 
 ## 分层策略
 
-纯 TypeScript 规则引擎先做确定性单元测试；流程阶段增加集成测试；可玩界面阶段验证交互、意图显示、不可用行动与规则引擎一致。未来 Python 模拟器使用共享配置和固定行动轨迹进行跨语言对照。本阶段不增加战斗实现来满足测试数量。
+纯 TypeScript 规则引擎先做确定性单元测试；流程阶段增加集成测试；可玩界面阶段验证交互、意图显示、不可用行动与规则引擎一致。未来 Python 模拟器使用共享配置和固定行动轨迹进行跨语言对照。本阶段只验证独立规则和底层进度函数，不以单元测试替代未来的 UI 与流程验收。
 
 ## 规则验收案例
 
@@ -26,7 +26,7 @@ Task 01 只建立计划和 Vitest 入口，目前没有实际测试文件。以�
 | R14 | 获得升级后失败，再重新开始 | 生命 100/100、能量 2/4、升级归零、敌人和计数重置，从第一场开始 |
 | R15 | 三场均胜利 | 每场先升级再前进；Boss 后升级并结束，不创建第四场 |
 
-跨战斗能量案例待负责人确认继承或重置后补充，不把未知规则写成通过断言。
+跨战斗能量规则已确认并纳入测试：新战斗能量为 2，核心上限保留；生命 37 原样继承；新 Boss 的实际攻击次数归零。
 
 ## 浏览器与未来 Python 模拟器的一致性
 
@@ -38,8 +38,51 @@ Task 01 只建立计划和 Vitest 入口，目前没有实际测试文件。以�
 
 - `npm run lint`：工程 lint。
 - `npm run typecheck`：生成 Next 路由类型并执行严格 TypeScript 检查。
-- `npm test`：Vitest，只匹配 `tests/**/*.test.ts`。当前无测试，预期非零退出；禁止用 `passWithNoTests` 冒充测试通过。
+- `npm test`：Vitest，只匹配 `tests/**/*.test.ts`。当前运行真实规则测试；禁止用 `passWithNoTests` 冒充测试通过。
 - `npm run build`：生产构建。
 - `npm run start -- --hostname 127.0.0.1`：构建后启动，以 HTTP 请求检查首页内容和样式资源。
 
-阶段 2 起在 tests/ 增加规则测试；以后在 components/、lib/、scripts/ 按实际交付物创建文件，不预置无意义空文件。每次报告区分通过、失败、未执行、跳过和零测试。
+阶段 2 已在 tests/ 增加规则测试；以后在 components/、lib/、scripts/ 按实际交付物创建文件，不预置无意义空文件。每次报告区分通过、失败、未执行、跳过和零测试。
+
+## Task 02 历史构建诊断（build 脚本调整前）
+
+环境为 Node.js 24.19.0、npm 11.9.0；依赖版本与锁文件保持不变。
+
+| 命令 | 退出码 | 结果 |
+| --- | ---: | --- |
+| `npm ci` | 0 | 安装 409 个包；已有 ESLint 9.39.5 上游弃用警告 |
+| `npm run lint` | 0 | 通过 |
+| `npm run typecheck` | 0 | 路由类型生成与严格类型检查通过 |
+| `npm test` | 0 | 1 个测试文件、28 项通过、0 失败、0 跳过 |
+| `npm run build` | 1 | Turbopack 在 PostCSS 处理时绑定端口失败；扩大执行权限后仍退出 1 |
+| `npm run build -- --webpack`（默认沙箱） | 1 | `Could not parse output from TypeScript's --showConfig.`；独立 `tsc --showConfig` 成功，未确定该失败根因 |
+| `npm run build -- --webpack`（扩大执行权限） | 0 | 编译、TypeScript、静态页面生成与构建追踪均完成 |
+
+默认 Turbopack 错误：
+
+```text
+Error [TurbopackInternalError]: Failed to write app endpoint /page
+Caused by:
+- [project]/app/globals.css [app-client] (css)
+- creating new process
+- binding to a port
+- Operation not permitted (os error 1)
+```
+
+以上为调整前的历史结果，不代表当前 build 脚本的执行结果。Turbopack 的权限问题仍未解决，也未宣称其构建通过。
+
+
+## Task 02 最终验收（明确采用 Webpack）
+
+由于当前 Codex 云环境中 Turbopack 的 PostCSS 子进程 socket 绑定权限错误，项目暂时将 `package.json` 的 build 脚本明确设为 `next build --webpack`。未升级依赖、修改锁文件、Next.js 配置或 PostCSS 配置。
+
+| 命令 | 退出码 | 真实结果 |
+| --- | ---: | --- |
+| `npm ci` | 0 | 安装 409 个包；已有 ESLint 上游弃用警告 |
+| `npm run lint` | 0 | 通过 |
+| `npm run typecheck` | 0 | 路由类型生成与严格类型检查通过 |
+| `npm test` | 0 | 1 个测试文件，28 通过、0 失败、0 跳过 |
+| `npm run build`（扩大执行权限） | 0 | 实际调用 `next build --webpack`；Next.js 16.4.3 (webpack)，编译、类型检查、静态页面生成及构建追踪完成 |
+| `git diff --check` | 0 | 通过 |
+
+Task 02 规则引擎与当前 Webpack 生产构建方案验收完成。浏览器战斗界面、完整三战流程、Python 模拟及部署仍未实现；未触发环境发布，Task 03 保持计划状态。
