@@ -1,0 +1,129 @@
+{
+  "schemaVersion": 1,
+  "status": "committed",
+  "reconstructionId": "Task 06A-R1",
+  "baselineCommit": "e3f0a3ff04506e6cbb7f2736f50ca710d7687cc7",
+  "coverage": "full",
+  "maxActionsPerBattle": 200,
+  "implementation": {
+    "lib/simulation/run-challenge-diagnostics-r1.ts": "aca25e910fa2135ee5105eadddb5f1f1bb9ba2aea5db58a999ff28a9b22cd946",
+    "lib/simulation/serialize-challenge-diagnostics-r1.ts": "601e41f659430ba1948b0b8f69a5de8f25b3e55e097bd1afbee248d6d0f0ebcd",
+    "lib/simulation/verify-challenge-diagnostics-r1.ts": "06e2240aa3dd587ed1f39ba7f0849e36968fdcc8142ba44dca01a77a1f584ae6",
+    "scripts/run-challenge-diagnostics-r1.mjs": "42c9446983cadbc73ac6443941f0337c7b1a70236b1b0f958ecdbb82ebd65f44"
+  },
+  "config": {
+    "actions": {
+      "attack": {
+        "cost": 0,
+        "damage": 12,
+        "gain": 0,
+        "reduction": 0
+      },
+      "charge": {
+        "cost": 0,
+        "damage": 0,
+        "gain": 2,
+        "reduction": 0
+      },
+      "defend": {
+        "cost": 0,
+        "damage": 0,
+        "gain": 1,
+        "reduction": 12
+      },
+      "heavy": {
+        "cost": 2,
+        "damage": 25,
+        "gain": 0,
+        "reduction": 0
+      }
+    },
+    "enemies": {
+      "boss": {
+        "damage": 12,
+        "maxHp": 120,
+        "specialDamage": 22,
+        "specialEvery": 3
+      },
+      "heavy": {
+        "damage": 13,
+        "maxHp": 60,
+        "specialDamage": null,
+        "specialEvery": null
+      },
+      "light": {
+        "damage": 9,
+        "maxHp": 42,
+        "specialDamage": null,
+        "specialEvery": null
+      }
+    },
+    "player": {
+      "energyCap": 4,
+      "initialEnergy": 2,
+      "initialHp": 100,
+      "maxHp": 100
+    },
+    "upgrades": {
+      "armor": {
+        "damage": 0,
+        "energyCap": 0,
+        "reduction": 6
+      },
+      "blade": {
+        "damage": 3,
+        "energyCap": 0,
+        "reduction": 0
+      },
+      "core": {
+        "damage": 0,
+        "energyCap": 1,
+        "reduction": 0
+      }
+    }
+  },
+  "strategyDefinitions": {
+    "A": "Always attack.",
+    "B": "Heavy when energy >= heavy cost; otherwise attack.",
+    "C": "Charge when energy < current energyCap; otherwise heavy.",
+    "D": "Defend only when the announced attack is lethal and defense leaves HP > 0; otherwise B. Armor is included; no player-first-kill prediction.",
+    "E": "Defend when energy < heavy cost and intent is non-null; otherwise B.",
+    "F": "Attack if lethal (including Blade); else affordable heavy if lethal (including Blade); otherwise B."
+  },
+  "experimentSummary": {
+    "actionAttempts": 884,
+    "attackCount": 284,
+    "bossNormalAttacks": 290,
+    "bossSpecialAttacks": 135,
+    "chargeCount": 54,
+    "completedBattles": 108,
+    "defeat": 50,
+    "defendCount": 335,
+    "enemyAttacks": 776,
+    "error": 0,
+    "heavyCount": 211,
+    "overkillDamageDealt": 831,
+    "overkillDamageTaken": 301,
+    "playerActions": 884,
+    "rawHpLossDealt": 9160,
+    "rawHpLossTaken": 5675,
+    "scenarios": 54,
+    "startedBattles": 159,
+    "timeout": 1,
+    "totalDamageDealt": 8329,
+    "totalDamageTaken": 5374,
+    "victory": 3
+  },
+  "files": [
+    {
+      "name": "results.csv",
+      "sha256": "c8e2ab4a71a6344dbbd83b780ebe8e2c448716639ddb93f717e192d989e49b67",
+      "size": 11969
+    },
+    {
+      "name": "actions.json",
+      "sha256": "e6c2e3b2cf22b0e6d1ca19163358ad4bccf5d3de73cb4556bb80e5fd8ade66e2",
+      "size": 1950985
+    }
+  ]
+}
