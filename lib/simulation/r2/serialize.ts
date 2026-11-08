@@ -21,6 +21,7 @@ export function serializeR2Error(run: R2Run): string {
   if (run.outcome !== "error") throw new TypeError("Expected a failed R2 run");
   verifyR2Run(run);
   const envelope = { schemaVersion: 1, status: "failed", experiment: "R2 diagnostic evidence", result: run };
+  // Validate the original object graph before JSON.stringify can invoke user-defined hooks.
   assertR2Json(envelope);
   return JSON.stringify(envelope, null, 2) + "\n";
 }

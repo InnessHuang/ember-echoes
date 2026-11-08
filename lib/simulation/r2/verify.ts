@@ -19,8 +19,27 @@ export function assertR2Json(value: unknown): void {
     if (typeof item !== "object" || stack.has(item)) throw new TypeError("R2 requires finite, acyclic JSON values");
     if (Object.getOwnPropertySymbols(item).length) throw new TypeError("R2 forbids Symbol metadata");
     if (!Array.isArray(item) && Object.getPrototypeOf(item) !== Object.prototype) throw new TypeError("R2 requires plain objects");
+    if (Array.isArray(item) && Object.getPrototypeOf(item) !== Array.prototype) throw new TypeError("R2 requires standard arrays");
+    const names = Object.getOwnPropertyNames(item);
+    if (names.includes("toJSON")) throw new TypeError("R2 forbids custom toJSON hooks");
     stack.add(item);
-    if (Array.isArray(item)) Array.from(item).forEach(visit); else Object.values(item).forEach(visit);
+    if (Array.isArray(item)) {
+      for (const name of names) {
+        if (name === "length") continue;
+        if (!/^(0|[1-9]\d*)$/.test(name) || Number(name) >= item.length) throw new TypeError("R2 forbids non-index array properties");
+      }
+      for (let i = 0; i < item.length; i++) {
+        const descriptor = Object.getOwnPropertyDescriptor(item, String(i));
+        if (!descriptor || !descriptor.enumerable || !("value" in descriptor)) throw new TypeError("R2 requires dense data arrays");
+        visit(descriptor.value);
+      }
+    } else {
+      for (const name of names) {
+        const descriptor = Object.getOwnPropertyDescriptor(item, name)!;
+        if (!descriptor.enumerable || !("value" in descriptor)) throw new TypeError("R2 requires enumerable data properties");
+        visit(descriptor.value);
+      }
+    }
     stack.delete(item);
   };
   visit(value);
@@ -47,7 +66,9 @@ function verifyErrorStep(trace: R2Trace, before: R2State, run: R2Run): R2State {
     } else same(trace.rawPolicy, null, "policy unavailable");
     same(trace.executionResult, null, "execution not started"); same(trace.effects, null, "no effects");
     same(trace.defense, null, "no defense"); same(trace.actualDefenseReduction, 0, "no reduction");
-    same(trace.after, before, "unexecuted error after"); return before;
+    same(trace.engineAccepted, null, "no engine acceptance"); same(trace.stateSource, "before", "pre-execution state source");
+    same(trace.after, before, "unexecuted error after");
+    return before;
   }
   const expectedPolicy = chooseR2Policy(before, run.scenario.strategyId, run.mechanism, run.scenario.policyVersion);
   same(trace.decision, expectedPolicy.decision, "error decision"); same(trace.policyEvidence, expectedPolicy.evidence, "error evidence");
@@ -55,17 +76,32 @@ function verifyErrorStep(trace: R2Trace, before: R2State, run: R2Run): R2State {
   if (trace.errorStage === "execution" && trace.executionResult === null) {
     same(trace.errorKind, "exception", "execution exception kind");
     same(trace.after, before, "execution threw without result"); same(trace.effects, null, "no returned effects");
+    same(trace.engineAccepted, null, "no engine acceptance"); same(trace.stateSource, "unavailable", "no execution state");
     same(trace.defense, null, "no returned defense"); same(trace.actualDefenseReduction, 0, "no returned reduction"); return before;
   }
   const raw = trace.executionResult as Partial<ReturnType<typeof performR2Action>> | null;
   const observed = raw && typeof raw === "object" ? raw : null;
-  const after = isR2State(observed?.state) ? observed!.state! : before;
   const effects = observed?.result && typeof observed.result === "object" ? observed.result : null;
+  const engineAccepted = typeof effects?.accepted === "boolean" ? effects.accepted : null;
+  const nestedBattle = effects?.state;
+  const inferredStreak = engineAccepted === true
+    ? trace.decision?.action === "defend" ? before.consecutiveDefenses + 1 : 0
+    : before.consecutiveDefenses;
+  const nestedState = engineAccepted !== null && nestedBattle && typeof nestedBattle === "object"
+    ? { battle: nestedBattle, consecutiveDefenses: inferredStreak } : null;
+  const after = isR2State(observed?.state) ? observed!.state!
+    : isR2State(nestedState) ? nestedState : before;
+  const source = isR2State(observed?.state) ? "outer"
+    : isR2State(nestedState) ? "result"
+    : observed || trace.errorStage === "result-validation" ? "unavailable" : "before";
+  same(trace.engineAccepted, engineAccepted, "engine accepted");
+  same(trace.stateSource, source, "state evidence source");
   const defense = observed?.defense && typeof observed.defense === "object" ? observed.defense : null;
   same(trace.after, after, "observed error after"); same(trace.effects, effects, "observed error effects"); same(trace.defense, defense, "observed error defense");
   same(trace.actualDefenseReduction, trace.decision?.action === "defend" && effects?.accepted && Number.isFinite(defense?.damagePrevented) ? defense!.damagePrevented : 0, "observed reduction");
   if (trace.errorStage === "execution") {
     same(trace.errorKind, "rejected", "rejection kind");
+    same(trace.engineAccepted, false, "rejected engine action");
     if (!effects || effects.accepted !== false || !["battle-ended", "insufficient-energy", "unknown-action"].includes(effects.reason)) throw new TypeError("Invalid rejected execution evidence");
     same(after, before, "rejected state"); same(effects.state, before.battle, "rejected result state");
     same(trace.defense, null, "rejected defense"); same(trace.error, effects.reason, "rejection reason");
@@ -112,7 +148,8 @@ export function verifyR2Run(run: R2Run): void {
       same(trace.intentBefore, getEnemyIntent(expected.battle), `intent ${bi}/${ai}`);
       const step = performR2Action(expected, decision.action, run.mechanism);
       if (!step.result.accepted) throw new TypeError("Rejected action cannot be a completed R2 trace");
-      same(trace.accepted, true, "accepted"); same(trace.error, null, "error");
+      same(trace.accepted, true, "accepted"); same(trace.engineAccepted, true, "engine accepted");
+      same(trace.stateSource, "outer", "verified outer state"); same(trace.error, null, "error");
       same(trace.errorStage, null, "successful stage");
       same(trace.errorKind, null, "successful error kind");
       same(trace.rawPolicy, { decision, evidence }, "successful raw policy");
@@ -125,6 +162,8 @@ export function verifyR2Run(run: R2Run): void {
       expected = step.state; same(trace.after, expected, `after ${bi}/${ai}`); count++;
     }
     same(b.final, expected, "battle final");
+    if (!sawError) same(b.finalStateAvailable, true, "successful final state available");
+    else same(b.finalStateAvailable, b.actions.at(-1)?.stateSource !== "unavailable", "failed final state confidence");
     const outcome = sawError ? "error" : expected.battle.phase === "ongoing" ? "timeout" : expected.battle.phase;
     same(b.outcome, outcome, "battle outcome");
     if (outcome === "timeout" && count !== run.maxActionsPerBattle) throw new TypeError("Premature timeout");

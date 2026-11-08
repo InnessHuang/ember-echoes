@@ -19,7 +19,8 @@ class R2Rejection extends Error {}
 interface R2TraceBase {
   readonly before: R2State; readonly after: R2State;
   readonly intentBefore: ReturnType<typeof getEnemyIntent>;
-  readonly accepted: boolean; readonly effects: R2ActionResult["result"] | null;
+  /** accepted means the step passed validation; engineAccepted records the engine's observed response. */
+  readonly accepted: boolean; readonly engineAccepted: boolean | null; readonly stateSource: "outer" | "result" | "before" | "unavailable"; readonly effects: R2ActionResult["result"] | null;
   readonly defense: R2ActionResult["defense"];
   readonly actualDefenseReduction: number;
   readonly rawPolicy: unknown;
@@ -33,6 +34,8 @@ export type R2Trace = R2TraceBase & (
 export interface R2Battle {
   readonly initial: R2State; readonly final: R2State; readonly outcome: SimulationOutcome;
   readonly actions: readonly R2Trace[];
+  /** False means no structurally valid final battle state was available in the returned evidence; availability does not imply verification. */
+  readonly finalStateAvailable: boolean;
 }
 export interface R2Upgrade { readonly upgrade: UpgradeId; readonly before: R2State; readonly after: R2State }
 export interface R2Run {
@@ -129,17 +132,20 @@ export function runR2Challenge(scenario: R2Scenario, mechanism: DefenseMechanism
   for (let encounter = 0; encounter < 3; encounter++) {
     let state: R2State = { battle: startBattle(ENEMIES[encounter], progress), consecutiveDefenses: 0 };
     const initial = structuredClone(state), actions: R2Trace[] = [];
-    let accepted = 0;
+    let accepted = 0, stateAvailable = true;
     while (state.battle.phase === "ongoing" && accepted < maxActionsPerBattle) {
       let before = state, intentBefore: EnemyIntent | null = null;
       let decision: R2Decision | null = null, policyEvidence: PolicyEvidence | null = null;
       let rawPolicy: unknown = null, executionResult: unknown = null;
       let effects: R2ActionResult["result"] | null = null, defense: R2ActionResult["defense"] = null;
-      let actualDefenseReduction = 0, stage: R2ErrorStage = "snapshot";
+      let actualDefenseReduction = 0, engineAccepted: boolean | null = null;
+      let stateSource: "outer" | "result" | "before" | "unavailable" = "before";
+      let stage: R2ErrorStage = "snapshot";
       try {
         const snapshot = deps.snapshot(copyState(state));
         if (!isDeepStrictEqual(snapshot, state)) throw new R2ValidationError("Snapshot differs from actual state");
         before = snapshot;
+        stateSource = "before";
         stage = "intent";
         const intent = deps.intent(copyState(before).battle);
         if (!isDeepStrictEqual(intent, getEnemyIntent(before.battle))) throw new R2ValidationError("Invalid enemy intent");
@@ -155,15 +161,37 @@ export function runR2Challenge(scenario: R2Scenario, mechanism: DefenseMechanism
         // Preserve what was returned before checking it; malformed raw values remain diagnostic evidence.
         if (executionResult && typeof executionResult === "object") {
           const observed = executionResult as Partial<R2ActionResult>;
-          if (isR2State(observed.state)) state = copyState(observed.state);
-          if (observed.result && typeof observed.result === "object") effects = observed.result;
+          if (observed.result && typeof observed.result === "object") {
+            effects = observed.result;
+            if (typeof observed.result.accepted === "boolean") engineAccepted = observed.result.accepted;
+          }
           if (observed.defense && typeof observed.defense === "object") defense = observed.defense;
+          // Preserve the best observed post-action state. The nested ActionResult.state is
+          // authoritative evidence when the wrapper-level R2State is missing, but it does
+          // not make the malformed wrapper a verified execution result.
+          if (isR2State(observed.state)) {
+            state = copyState(observed.state); stateSource = "outer";
+          } else if (engineAccepted !== null && observed.result && typeof observed.result === "object"
+            && observed.result.state && typeof observed.result.state === "object") {
+            const battleState = observed.result.state;
+            const streak = engineAccepted === true
+              ? decision.action === "defend" ? before.consecutiveDefenses + 1 : 0
+              : before.consecutiveDefenses;
+            const candidate = { battle: battleState, consecutiveDefenses: streak };
+            if (isR2State(candidate)) { state = copyState(candidate); stateSource = "result"; }
+            else { stateAvailable = false; stateSource = "unavailable"; }
+          } else {
+            stateAvailable = false; stateSource = "unavailable";
+          }
           if (decision.action === "defend" && effects?.accepted && Number.isFinite(defense?.damagePrevented)) actualDefenseReduction = defense!.damagePrevented;
           if (effects?.accepted === false && isDeepStrictEqual(observed.state, before)
             && isDeepStrictEqual(effects.state, before.battle) && observed.defense === null
             && ["battle-ended", "insufficient-energy", "unknown-action"].includes(effects.reason)) {
             stage = "execution"; throw new R2Rejection(effects.reason);
           }
+        } else {
+          // Execution was attempted but returned no usable state evidence.
+          stateAvailable = false; stateSource = "unavailable";
         }
         deps.validateResult(executionResult, before, decision.action, config);
         const step = executionResult as R2ActionResult;
@@ -173,21 +201,24 @@ export function runR2Challenge(scenario: R2Scenario, mechanism: DefenseMechanism
         const retainedPolicy = structuredClone(rawPolicy), retainedStep = deps.retainResult(structuredClone(step));
         if (!isDeepStrictEqual(retainedStep, step)) throw new R2ValidationError("Recorded execution differs from actual result");
         actions.push({ before: copyState(before), after: copyState(state), decision: retainedPolicy.decision, intentBefore,
-          accepted: true, effects: retainedStep.result, defense: retainedStep.defense, policyEvidence: retainedPolicy.evidence,
+          accepted: true, engineAccepted: true, stateSource: "outer", effects: retainedStep.result, defense: retainedStep.defense, policyEvidence: retainedPolicy.evidence,
           actualDefenseReduction: step.defense?.damagePrevented ?? 0,
           error: null, errorStage: null, errorKind: null, rawPolicy: retainedPolicy, executionResult: retainedStep });
         accepted++;
       } catch (cause) {
+        if (stage === "execution" && executionResult === null) {
+          stateAvailable = false; stateSource = "unavailable";
+        }
         try { error = String(cause instanceof Error ? cause.message || cause.name : cause) || "Empty thrown value"; }
         catch { error = "Unreadable thrown value"; }
         actions.push({ before: copyState(before), after: copyState(state), decision, intentBefore,
-          accepted: false, effects, defense, error, policyEvidence, actualDefenseReduction,
+          accepted: false, engineAccepted, stateSource, effects, defense, error, policyEvidence, actualDefenseReduction,
           errorStage: stage, errorKind: cause instanceof R2Rejection ? "rejected" : cause instanceof R2ValidationError ? "invalid-output" : "exception", rawPolicy, executionResult });
         break;
       }
     }
     outcome = error !== null ? "error" : state.battle.phase === "ongoing" ? "timeout" : state.battle.phase;
-    battles.push({ initial, final: structuredClone(state), outcome, actions });
+    battles.push({ initial, final: structuredClone(state), outcome, actions, finalStateAvailable: stateAvailable });
     if (outcome !== "victory" || encounter === 2) break;
     const upgrade = plan.upgradePath[encounter];
     progress = applyUpgrade(getPlayerProgress(state.battle), upgrade);

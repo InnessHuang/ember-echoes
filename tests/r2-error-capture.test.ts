@@ -104,7 +104,14 @@ describe("per-attempt R2 error boundary", () => {
     expect(last(run).before).toEqual(prior.at(-1)!.after);
     expect(last(run).after).toEqual(last(run).before);
     expect(run.summary.attackCount).toBe(5); expect(run.summary.enemyAttacks).toBe(4);
-    expect(run.summary.finalHp).toBe(60); expect(run.summary.rawHpLoss).toBe(40);
+    if (stage === "execution") {
+      expect(run.summary.finalHp).toBeNull(); expect(run.summary.finalEnergy).toBeNull();
+      expect(run.summary.finalHpAvailable).toBe(false); expect(run.summary.finalHpVerified).toBe(false);
+    } else {
+      expect(run.summary.finalHp).toBe(60); expect(run.summary.finalHpAvailable).toBe(true);
+      expect(run.summary.finalHpVerified).toBe(true);
+    }
+    expect(run.summary.rawHpLoss).toBe(40);
   });
   it("accepted execution followed by invalid effects preserves actual state and returned result", () => {
     const execute = vi.fn((...args: Parameters<typeof performR2Action>) => {
@@ -147,6 +154,11 @@ describe("per-attempt R2 error boundary", () => {
   it("undefined execution output is a result-validation failure without invented effects", () => {
     const run = runR2Challenge(plan, config, 200, { execute: () => undefined }); check(run, "result-validation", 0);
     expect(last(run).effects).toBeNull(); expect(last(run).after).toEqual(last(run).before);
+    expect(run.battles.at(-1)?.finalStateAvailable).toBe(false);
+    expect(run.summary.finalHpAvailable).toBe(false);
+    expect(run.summary.finalHpVerified).toBe(false);
+    expect(run.summary.finalHp).toBeNull();
+    expect(run.summary.finalEnergy).toBeNull();
   });
   it("non-finite raw execution is retained in memory and explicitly refused by JSON serialization", () => {
     const run = runR2Challenge(plan, config, 200, { execute: (...args) => {
@@ -195,5 +207,61 @@ describe("error evidence verification and completion separation", () => {
     expect(run.outcome).toBe(outcome); verifyR2Run(run); expect(() => serializeR2Run(run)).not.toThrow();
     expect(() => serializeR2Error(run)).toThrow("failed");
     for (const a of run.battles.flatMap(b => b.actions)) expect(a).toMatchObject({ accepted: true, error: null, errorStage: null });
+  });
+});
+
+
+describe("integrity regressions from independent audit", () => {
+  it("uses nested result.state as observed post-action state when wrapper state is missing", () => {
+    const execute = (...args: Parameters<typeof performR2Action>) => {
+      const actual = performR2Action(...args);
+      const { state: _omitted, ...malformed } = actual;
+      return malformed;
+    };
+    const run = runR2Challenge(plan, config, 200, { execute });
+    const step = last(run);
+    expect(run.outcome).toBe("error");
+    expect(step.engineAccepted).toBe(true);
+    expect(step.accepted).toBe(false);
+    expect(step.stateSource).toBe("result");
+    expect(step.after.battle.player.hp).toBe(91);
+    expect(run.battles.at(-1)?.finalStateAvailable).toBe(true);
+    expect(run.summary.finalHp).toBe(91);
+    expect(run.summary.observedRawHpLoss).toBe(9);
+    expect(run.summary.acceptedUnverifiedActions).toBe(1);
+    expect(run.summary.verifiedActions).toBe(0);
+    expect(() => verifyR2Run(run)).not.toThrow();
+  });
+
+  it("separates engine acceptance from verification when validator throws after execution", () => {
+    const actual = performR2Action;
+    const run = runR2Challenge(plan, config, 200, {
+      execute: (...args) => actual(...args),
+      validateResult: () => failure("validator unavailable")
+    });
+    expect(last(run).engineAccepted).toBe(true);
+    expect(last(run).accepted).toBe(false);
+    expect(run.summary.engineAcceptedActions).toBe(1);
+    expect(run.summary.verifiedActions).toBe(0);
+    expect(run.summary.acceptedUnverifiedActions).toBe(1);
+    expect(run.summary.observedRawHpLoss).toBe(9);
+    expect(run.summary.rawHpLoss).toBe(0);
+    expect(run.summary.finalHp).toBe(91);
+    expect(run.summary.finalHpAvailable).toBe(true);
+    expect(run.summary.finalHpVerified).toBe(false);
+    expect(() => verifyR2Run(run)).not.toThrow();
+  });
+
+  it("rejects a non-enumerable toJSON hook instead of silently replacing raw policy evidence", () => {
+    const policy = (...args: Parameters<typeof chooseR2Policy>) => {
+      const raw = structuredClone(chooseR2Policy(...args));
+      Object.assign(raw.decision, { action: "illegal-action" });
+      Object.defineProperty(raw, "toJSON", { enumerable: false, value: () => ({ redacted: true }) });
+      return raw;
+    };
+    const run = runR2Challenge(plan, config, 200, { policy });
+    expect(run.outcome).toBe("error");
+    expect(last(run).rawPolicy).toHaveProperty("decision.action", "illegal-action");
+    expect(() => serializeR2Error(run)).toThrow("toJSON");
   });
 });
